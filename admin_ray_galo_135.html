@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Admin — Ray Galo 135</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #F5FAFE;
+    color: #0A6EBD;
+    min-height: 100vh;
+    padding-bottom: 2rem;
+  }
+  header {
+    background: linear-gradient(135deg, #0A6EBD 0%, #4DA8DA 100%);
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: white;
+  }
+  header h1 { color: #FFEB3B; font-size: 1.5rem; letter-spacing: 0.05em; }
+  header p { font-size: 0.85rem; opacity: 0.9; margin-top: 0.3rem; }
+
+  .tabs {
+    display: flex; gap: 4px;
+    background: white;
+    padding: 8px;
+    margin: 0;
+    overflow-x: auto;
+    border-bottom: 2px solid #FFEB3B;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .tab {
+    padding: 10px 16px;
+    background: #f0f0f0;
+    border: none; border-radius: 8px;
+    font-weight: bold; cursor: pointer;
+    white-space: nowrap;
+    color: #0A6EBD;
+    font-size: 0.9rem;
+  }
+  .tab.active { background: #FFEB3B; color: #0A6EBD; }
+
+  .container { max-width: 720px; margin: 1.5rem auto; padding: 0 1rem; }
+  .secao { display: none; }
+  .secao.active { display: block; }
+
+  /* Ordem categorias */
+  .caixa-ordem {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(42,27,92,0.08);
+    border-left: 4px solid #FFEB3B;
+  }
+  .caixa-ordem h3 { color: #0A6EBD; margin-bottom: 0.6rem; font-size: 1rem; }
+  .lista-ordem { list-style: none; }
+  .lista-ordem li {
+    background: #F5FAFE;
+    padding: 10px 14px; margin: 5px 0;
+    border-radius: 8px;
+    cursor: move;
+    border: 2px solid #FFEB3B;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: bold; color: #0A6EBD;
+  }
+  .lista-ordem li:hover { background: #E3F2FD; }
+  .btn-salvar-ordem {
+    background: #0A6EBD; color: #FFEB3B;
+    border: none; padding: 10px 20px;
+    border-radius: 8px; font-weight: bold; cursor: pointer;
+    margin-top: 0.5rem; width: 100%;
+  }
+
+  /* Produto card admin */
+  .produto-admin {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    box-shadow: 0 2px 8px rgba(42,27,92,0.08);
+    border-left: 4px solid #FFEB3B;
+  }
+  .produto-admin.inativo { opacity: 0.6; border-left-color: #999; }
+  .produto-admin-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 0.6rem;
+  }
+  .produto-admin-cat {
+    font-size: 0.7rem;
+    background: #0A6EBD; color: #FFEB3B;
+    padding: 2px 8px; border-radius: 10px;
+    font-weight: bold;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px; margin: 8px 0;
+  }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-row label {
+    display: block; font-size: 0.75rem;
+    color: #666; margin-bottom: 2px;
+  }
+  .form-row input, .form-row textarea {
+    width: 100%; padding: 8px;
+    border: 1px solid #ddd; border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  .form-row input:focus, .form-row textarea:focus {
+    outline: none; border-color: #FFEB3B;
+  }
+  .btn-salvar {
+    background: #FFEB3B; color: #0A6EBD;
+    border: none; padding: 8px 16px;
+    border-radius: 6px; font-weight: bold; cursor: pointer;
+    margin-top: 0.5rem;
+  }
+  .btn-excluir {
+    background: #f44336; color: white;
+    border: none; padding: 8px 16px;
+    border-radius: 6px; font-weight: bold; cursor: pointer;
+    margin-top: 0.5rem; margin-left: 6px;
+  }
+  .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #ccc; transition: .3s; border-radius: 24px;
+  }
+  .toggle-slider::before {
+    position: absolute; content: "";
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background: white; transition: .3s; border-radius: 50%;
+  }
+  .toggle input:checked + .toggle-slider { background: #4CAF50; }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+  .btn-novo {
+    background: #4CAF50; color: white;
+    border: none; padding: 12px 20px;
+    border-radius: 8px; font-weight: bold; cursor: pointer;
+    margin-bottom: 1rem; width: 100%; font-size: 1rem;
+  }
+
+  /* Pedidos */
+  .pedido-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    box-shadow: 0 2px 8px rgba(42,27,92,0.08);
+    border-left: 4px solid #4CAF50;
+  }
+  .pedido-card.entregue { border-left-color: #999; opacity: 0.7; }
+  .pedido-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem; border-bottom: 1px solid #eee;
+  }
+  .pedido-cadeira {
+    background: #FFEB3B; color: #0A6EBD;
+    padding: 4px 12px; border-radius: 8px;
+    font-weight: bold; font-size: 1rem;
+  }
+  .pedido-hora { color: #666; font-size: 0.85rem; }
+  .pedido-item { font-size: 0.9rem; padding: 2px 0; }
+  .pedido-total {
+    font-weight: bold; color: #0A6EBD;
+    margin-top: 0.5rem; text-align: right;
+    font-size: 1.05rem;
+  }
+  .btn-entregue {
+    background: #4CAF50; color: white;
+    border: none; padding: 6px 12px;
+    border-radius: 6px; font-weight: bold; cursor: pointer;
+    margin-top: 0.5rem; font-size: 0.85rem;
+  }
+  .btn-entregue.entregue { background: #999; }
+
+  /* Resumo */
+  .resumo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin-bottom: 1rem;
+  }
+  .card-resumo {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(42,27,92,0.08);
+    border-top: 4px solid #FFEB3B;
+  }
+  .card-resumo .num {
+    font-size: 1.8rem; font-weight: 900;
+    color: #0A6EBD;
+  }
+  .card-resumo .label {
+    font-size: 0.78rem; color: #666;
+    margin-top: 0.2rem;
+  }
+
+  .alerta-traduz {
+    background: #E3F2FD;
+    border: 1px solid #FFEB3B;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #0A6EBD;
+    margin: 8px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">
+    <img src="https://i.imgur.com/AYn1Dhl.png" alt="Ray Galo 135" style="width:65px;height:65px;border-radius:50%;background:white;border:2px solid #FFEB3B;object-fit:contain;padding:5px;">
+    <h1 style="margin:0;">PAINEL ADMIN — RAY GALO 135</h1>
+  </div>
+  <p>Gerencie produtos, pedidos e configurações</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="trocarTab('produtos')">📋 Produtos</button>
+  <button class="tab" onclick="trocarTab('pedidos')">🛎️ Pedidos</button>
+  <button class="tab" onclick="trocarTab('resumo')">📊 Resumo</button>
+</div>
+
+<div class="container">
+  <!-- PRODUTOS -->
+  <div class="secao active" id="secao-produtos">
+    <div class="caixa-ordem">
+      <h3>📌 Ordem das categorias no cardápio</h3>
+      <p style="font-size:0.8rem;color:#666;margin-bottom:8px;">Arraste para reordenar:</p>
+      <ul class="lista-ordem" id="listaOrdem"></ul>
+      <button class="btn-salvar-ordem" onclick="salvarOrdem()">Salvar ordem</button>
+    </div>
+
+    <button class="btn-novo" onclick="adicionarProduto()">➕ Adicionar novo produto</button>
+
+    <div id="listaProdutos"></div>
+  </div>
+
+  <!-- PEDIDOS -->
+  <div class="secao" id="secao-pedidos">
+    <h3 style="margin-bottom:0.8rem;color:#0A6EBD;">Pedidos do dia</h3>
+    <div id="listaPedidos"></div>
+  </div>
+
+  <!-- RESUMO -->
+  <div class="secao" id="secao-resumo">
+    <h3 style="margin-bottom:0.8rem;color:#0A6EBD;">Resumo do dia</h3>
+    <div class="resumo-grid">
+      <div class="card-resumo"><div class="num" id="totalPedidosDia">0</div><div class="label">Pedidos hoje</div></div>
+      <div class="card-resumo"><div class="num" id="receitaDia">R$ 0</div><div class="label">Receita do dia</div></div>
+      <div class="card-resumo"><div class="num" id="ticketMedio">R$ 0</div><div class="label">Ticket médio</div></div>
+      <div class="card-resumo"><div class="num" id="topProduto">—</div><div class="label">Mais pedido</div></div>
+    </div>
+    <div class="caixa-ordem">
+      <h3>📈 Produtos mais pedidos</h3>
+      <div id="rankingProdutos"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAX6X6ZX__HxwamgN4wcx8p1jgoQUEWtjE",
+  authDomain: "cardapio-digital-73474.firebaseapp.com",
+  databaseURL: "https://cardapio-digital-73474-default-rtdb.firebaseio.com",
+  projectId: "cardapio-digital-73474",
+  storageBucket: "cardapio-digital-73474.firebasestorage.app",
+  messagingSenderId: "950292544322",
+  appId: "1:950292544322:web:1432db52ebb3add23366db"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const DB_KEY = 'ray-galo-135';
+
+// 🔒 Proteção de acesso — só permite entrar com ?admin=raygalo135
+const params = new URLSearchParams(window.location.search);
+if (params.get('admin') !== 'raygalo135') {
+  document.body.innerHTML = `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A6EBD 0%,#4DA8DA 100%);padding:2rem;">
+      <div style="background:white;padding:2.5rem;border-radius:16px;text-align:center;max-width:400px;border:3px solid #FFEB3B;">
+        <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
+        <h1 style="color:#0A6EBD;font-size:1.4rem;margin-bottom:0.8rem;">Acesso restrito</h1>
+        <p style="color:#666;font-size:0.95rem;line-height:1.5;">Esta área é exclusiva para o administrador da barraca <strong>Ray Galo 135</strong>.</p>
+        <p style="color:#999;font-size:0.8rem;margin-top:1rem;">Se você é o administrador, utilize o link completo enviado a você.</p>
+      </div>
+    </div>
+  `;
+  throw new Error('Acesso não autorizado');
+}
+
+// Lista base de produtos (mesma do cardápio)
+let produtos = [
+  // ALUGUEL
+  { categoria: "Aluguel", nome: "Cadeira", pt: "Cadeira de praia — unidade", en: "Beach chair — per unit", es: "Silla de playa — unidad", fr: "Chaise de plage — unité", it: "Sedia da spiaggia — unità", de: "Strandstuhl — Stück", zh: "沙滩椅 — 每个", ja: "ビーチチェア — 1個", preco: 30.00, emoji: "🪑", img: "", ativo: true },
+  { categoria: "Aluguel", nome: "Guarda-sol P", pt: "Guarda-sol pequeno — unidade", en: "Small umbrella sun — per unit", es: "Sombrilla pequeña — unidad", fr: "Petit parasol — unité", it: "Ombrellone piccolo — unità", de: "Kleiner Sonnenschirm — Stück", zh: "小阳伞 — 每个", ja: "小型ビーチパラソル — 1個", preco: 0.00, emoji: "⛱️", img: "", ativo: true },
+  { categoria: "Aluguel", nome: "Guarda-sol G (Ombrelone P)", pt: "Guarda-sol grande P — unidade", en: "Big umbrella P — per unit", es: "Sombrilla grande P — unidad", fr: "Grand parasol P — unité", it: "Ombrellone grande P — unità", de: "Großer Sonnenschirm P — Stück", zh: "大阳伞 P — 每个", ja: "大型ビーチパラソル P — 1個", preco: 100.00, emoji: "⛱️", img: "", ativo: true },
+  { categoria: "Aluguel", nome: "Guarda-sol G (Ombrelone G)", pt: "Guarda-sol grande G — unidade", en: "Big umbrella G — per unit", es: "Sombrilla grande G — unidad", fr: "Grand parasol G — unité", it: "Ombrellone grande G — unità", de: "Großer Sonnenschirm G — Stück", zh: "大阳伞 G — 每个", ja: "大型ビーチパラソル G — 1個", preco: 150.00, emoji: "⛱️", img: "", ativo: true },
+  // DRINKS / COCKTAILS
+  { categoria: "Drinks", nome: "Caipirinha 500ml", pt: "Cachaça, limão, açúcar e gelo — 500ml (acréscimo R$ 5 morango)", en: "Cachaça, lime, sugar and ice — 500ml (+ R$ 5 strawberry)", es: "Cachaza, lima, azúcar y hielo — 500ml (+ R$ 5 fresa)", fr: "Cachaça, citron vert, sucre et glace — 500ml (+ R$ 5 fraise)", it: "Cachaça, lime, zucchero e ghiaccio — 500ml (+ R$ 5 fragola)", de: "Cachaça, Limette, Zucker und Eis — 500ml (+ R$ 5 Erdbeere)", zh: "卡莎萨酒、青柠、糖和冰 — 500毫升 (+5雷亚尔草莓)", ja: "カシャーサ、ライム、砂糖、氷 — 500ml（イチゴ +R$5）", preco: 30.00, emoji: "🍹", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Caipirinha 700ml", pt: "Cachaça, limão, açúcar e gelo — 700ml (acréscimo R$ 5 morango)", en: "Cachaça, lime, sugar and ice — 700ml (+ R$ 5 strawberry)", es: "Cachaza, lima, azúcar y hielo — 700ml (+ R$ 5 fresa)", fr: "Cachaça, citron vert, sucre et glace — 700ml (+ R$ 5 fraise)", it: "Cachaça, lime, zucchero e ghiaccio — 700ml (+ R$ 5 fragola)", de: "Cachaça, Limette, Zucker und Eis — 700ml (+ R$ 5 Erdbeere)", zh: "卡莎萨酒、青柠、糖和冰 — 700毫升 (+5雷亚尔草莓)", ja: "カシャーサ、ライム、砂糖、氷 — 700ml（イチゴ +R$5）", preco: 35.00, emoji: "🍹", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Caipivodka 500ml", pt: "Vodka, limão, açúcar e gelo — 500ml (acréscimo R$ 5 morango)", en: "Vodka, lime, sugar and ice — 500ml (+ R$ 5 strawberry)", es: "Vodka, lima, azúcar y hielo — 500ml (+ R$ 5 fresa)", fr: "Vodka, citron vert, sucre et glace — 500ml (+ R$ 5 fraise)", it: "Vodka, lime, zucchero e ghiaccio — 500ml (+ R$ 5 fragola)", de: "Wodka, Limette, Zucker und Eis — 500ml (+ R$ 5 Erdbeere)", zh: "伏特加、青柠、糖和冰 — 500毫升 (+5雷亚尔草莓)", ja: "ウォッカ、ライム、砂糖、氷 — 500ml（イチゴ +R$5）", preco: 40.00, emoji: "🍸", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Caipivodka 700ml", pt: "Vodka, limão, açúcar e gelo — 700ml (acréscimo R$ 5 morango)", en: "Vodka, lime, sugar and ice — 700ml (+ R$ 5 strawberry)", es: "Vodka, lima, azúcar y hielo — 700ml (+ R$ 5 fresa)", fr: "Vodka, citron vert, sucre et glace — 700ml (+ R$ 5 fraise)", it: "Vodka, lime, zucchero e ghiaccio — 700ml (+ R$ 5 fragola)", de: "Wodka, Limette, Zucker und Eis — 700ml (+ R$ 5 Erdbeere)", zh: "伏特加、青柠、糖和冰 — 700毫升 (+5雷亚尔草莓)", ja: "ウォッカ、ライム、砂糖、氷 — 700ml（イチゴ +R$5）", preco: 45.00, emoji: "🍸", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Brasileirinha 500ml", pt: "Limão com maracujá — 500ml", en: "Lime with passion fruit — 500ml", es: "Lima con maracuyá — 500ml", fr: "Citron vert avec fruit de la passion — 500ml", it: "Lime con frutto della passione — 500ml", de: "Limette mit Passionsfrucht — 500ml", zh: "青柠百香果 — 500毫升", ja: "ライムとパッションフルーツ — 500ml", preco: 30.00, emoji: "🍹", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Brasileirinha 700ml", pt: "Limão com maracujá — 700ml", en: "Lime with passion fruit — 700ml", es: "Lima con maracuyá — 700ml", fr: "Citron vert avec fruit de la passion — 700ml", it: "Lime con frutto della passione — 700ml", de: "Limette mit Passionsfrucht — 700ml", zh: "青柠百香果 — 700毫升", ja: "ライムとパッションフルーツ — 700ml", preco: 35.00, emoji: "🍹", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Carioca 500ml", pt: "Limão com morango — 500ml", en: "Lime with strawberry — 500ml", es: "Lima con fresa — 500ml", fr: "Citron vert avec fraise — 500ml", it: "Lime con fragola — 500ml", de: "Limette mit Erdbeere — 500ml", zh: "青柠草莓 — 500毫升", ja: "ライムとイチゴ — 500ml", preco: 40.00, emoji: "🍓", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Carioca 700ml", pt: "Limão com morango — 700ml", en: "Lime with strawberry — 700ml", es: "Lima con fresa — 700ml", fr: "Citron vert avec fraise — 700ml", it: "Lime con fragola — 700ml", de: "Limette mit Erdbeere — 700ml", zh: "青柠草莓 — 700毫升", ja: "ライムとイチゴ — 700ml", preco: 45.00, emoji: "🍓", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Pinacolada 500ml", pt: "Rum, leite de côco, abacaxi e gelo — 500ml", en: "Rum, coconut milk, pineapple and ice — 500ml", es: "Ron, leche de coco, piña y hielo — 500ml", fr: "Rhum, lait de coco, ananas et glace — 500ml", it: "Rum, latte di cocco, ananas e ghiaccio — 500ml", de: "Rum, Kokosmilch, Ananas und Eis — 500ml", zh: "朗姆酒、椰奶、菠萝和冰 — 500毫升", ja: "ラム、ココナッツミルク、パイナップル、氷 — 500ml", preco: 40.00, emoji: "🍍", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Pinacolada 700ml", pt: "Rum, leite de côco, abacaxi e gelo — 700ml", en: "Rum, coconut milk, pineapple and ice — 700ml", es: "Ron, leche de coco, piña y hielo — 700ml", fr: "Rhum, lait de coco, ananas et glace — 700ml", it: "Rum, latte di cocco, ananas e ghiaccio — 700ml", de: "Rum, Kokosmilch, Ananas und Eis — 700ml", zh: "朗姆酒、椰奶、菠萝和冰 — 700毫升", ja: "ラム、ココナッツミルク、パイナップル、氷 — 700ml", preco: 45.00, emoji: "🍍", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Côco loko", pt: "Côco com bebida especial", en: "Coconut with special drink", es: "Coco con bebida especial", fr: "Noix de coco avec boisson spéciale", it: "Cocco con bevanda speciale", de: "Kokosnuss mit Spezialgetränk", zh: "椰子配特调饮料", ja: "ココナッツとスペシャルドリンク", preco: 80.00, emoji: "🥥", img: "", ativo: true },
+  { categoria: "Drinks", nome: "Tropical", pt: "Drink tropical especial da casa", en: "Special tropical house drink", es: "Bebida tropical especial de la casa", fr: "Boisson tropicale spéciale de la maison", it: "Bevanda tropicale speciale della casa", de: "Tropisches Hausspezial-Getränk", zh: "热带特色饮料", ja: "トロピカルハウススペシャル", preco: 80.00, emoji: "🌴", img: "", ativo: true },
+  // BEBIDAS / DRINKS
+  { categoria: "Bebidas", nome: "Heineken latão", pt: "Cerveja Heineken 473ml", en: "Heineken beer 473ml", es: "Cerveza Heineken 473ml", fr: "Bière Heineken 473ml", it: "Birra Heineken 473ml", de: "Heineken Bier 473ml", zh: "喜力啤酒 473毫升", ja: "ハイネケン 473ml", preco: 15.00, emoji: "🍺", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Original latão", pt: "Cerveja Original 473ml", en: "Original beer 473ml", es: "Cerveza Original 473ml", fr: "Bière Original 473ml", it: "Birra Original 473ml", de: "Original Bier 473ml", zh: "Original啤酒 473毫升", ja: "オリジナルビール 473ml", preco: 15.00, emoji: "🍺", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Amstel latão", pt: "Cerveja Amstel 473ml", en: "Amstel beer 473ml", es: "Cerveza Amstel 473ml", fr: "Bière Amstel 473ml", it: "Birra Amstel 473ml", de: "Amstel Bier 473ml", zh: "Amstel啤酒 473毫升", ja: "アムステルビール 473ml", preco: 15.00, emoji: "🍺", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Corona latão", pt: "Cerveja Corona 473ml", en: "Corona beer 473ml", es: "Cerveza Corona 473ml", fr: "Bière Corona 473ml", it: "Birra Corona 473ml", de: "Corona Bier 473ml", zh: "科罗娜啤酒 473毫升", ja: "コロナビール 473ml", preco: 15.00, emoji: "🍺", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Brahma / Antarctica latão", pt: "Cerveja nacional latão 473ml", en: "National beer can 473ml", es: "Cerveza nacional lata 473ml", fr: "Bière nationale canette 473ml", it: "Birra nazionale lattina 473ml", de: "Nationales Bier Dose 473ml", zh: "国产啤酒罐装 473毫升", ja: "国産ビール 473ml缶", preco: 12.00, emoji: "🍺", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Água sem gás", pt: "Água mineral sem gás", en: "Still mineral water", es: "Agua mineral sin gas", fr: "Eau minérale plate", it: "Acqua minerale naturale", de: "Stilles Mineralwasser", zh: "无气矿泉水", ja: "ミネラルウォーター", preco: 6.00, emoji: "💧", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Água com gás", pt: "Água mineral com gás", en: "Sparkling mineral water", es: "Agua mineral con gas", fr: "Eau minérale gazeuse", it: "Acqua minerale frizzante", de: "Mineralwasser mit Kohlensäure", zh: "气泡矿泉水", ja: "炭酸水", preco: 8.00, emoji: "💧", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Refrigerante", pt: "Refrigerante lata 350ml", en: "Soda can 350ml", es: "Refresco lata 350ml", fr: "Soda canette 350ml", it: "Bibita lattina 350ml", de: "Erfrischungsgetränk Dose 350ml", zh: "汽水易拉罐 350毫升", ja: "炭酸飲料缶 350ml", preco: 10.00, emoji: "🥤", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Guaraviton", pt: "Bebida de guaraná natural", en: "Natural guaraná drink", es: "Bebida de guaraná natural", fr: "Boisson de guaraná naturel", it: "Bevanda di guaraná naturale", de: "Natürliches Guaraná-Getränk", zh: "天然瓜拉那饮料", ja: "天然ガラナドリンク", preco: 10.00, emoji: "🍶", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Gatorade", pt: "Bebida isotônica Gatorade", en: "Gatorade isotonic drink", es: "Bebida isotónica Gatorade", fr: "Boisson isotonique Gatorade", it: "Bevanda isotonica Gatorade", de: "Gatorade Sportgetränk", zh: "佳得乐运动饮料", ja: "ゲータレード", preco: 20.00, emoji: "🥤", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Red Bull", pt: "Energético Red Bull", en: "Red Bull energy drink", es: "Bebida energética Red Bull", fr: "Boisson énergisante Red Bull", it: "Energy drink Red Bull", de: "Red Bull Energy Drink", zh: "红牛能量饮料", ja: "レッドブル", preco: 25.00, emoji: "⚡", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Suco de frutas 500ml", pt: "Suco de frutas natural — 500ml", en: "Natural fruit juice — 500ml", es: "Jugo natural de frutas — 500ml", fr: "Jus de fruits naturel — 500ml", it: "Succo di frutta naturale — 500ml", de: "Natürlicher Fruchtsaft — 500ml", zh: "天然果汁 — 500毫升", ja: "天然フルーツジュース — 500ml", preco: 25.00, emoji: "🧃", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Suco de frutas 700ml", pt: "Suco de frutas natural — 700ml", en: "Natural fruit juice — 700ml", es: "Jugo natural de frutas — 700ml", fr: "Jus de fruits naturel — 700ml", it: "Succo di frutta naturale — 700ml", de: "Natürlicher Fruchtsaft — 700ml", zh: "天然果汁 — 700毫升", ja: "天然フルーツジュース — 700ml", preco: 35.00, emoji: "🧃", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Côco", pt: "Côco verde gelado", en: "Fresh green coconut", es: "Coco verde frío", fr: "Noix de coco verte fraîche", it: "Cocco verde fresco", de: "Frische grüne Kokosnuss", zh: "冰镇椰子", ja: "冷たい青ココナッツ", preco: 15.00, emoji: "🥥", img: "", ativo: true },
+  { categoria: "Bebidas", nome: "Balde de gelo", pt: "Balde de gelo para bebidas", en: "Ice bucket for drinks", es: "Cubo de hielo para bebidas", fr: "Seau à glace pour boissons", it: "Secchiello del ghiaccio", de: "Eiskübel für Getränke", zh: "饮料冰桶", ja: "ドリンク用アイスバケット", preco: 10.00, emoji: "🧊", img: "", ativo: true },
+  // PETISCOS / SNACKS
+  { categoria: "Petiscos", nome: "Peixe frito", pt: "Peixe frito inteiro", en: "Whole fried fish", es: "Pescado entero frito", fr: "Poisson entier frit", it: "Pesce intero fritto", de: "Ganzer gebratener Fisch", zh: "炸全鱼", ja: "丸ごと揚げ魚", preco: 250.00, emoji: "🐟", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Anéis de cebola", pt: "Anéis de cebola empanados", en: "Breaded onion rings", es: "Aros de cebolla empanizados", fr: "Anneaux d'oignon panés", it: "Anelli di cipolla impanati", de: "Panierte Zwiebelringe", zh: "炸洋葱圈", ja: "オニオンリング", preco: 70.00, emoji: "🧅", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Batata frita", pt: "Porção de batata frita crocante", en: "Crispy french fries portion", es: "Porción de papas fritas crujientes", fr: "Portion de frites croustillantes", it: "Porzione di patatine fritte croccanti", de: "Portion knusprige Pommes frites", zh: "酥脆薯条", ja: "カリカリポテトフライ", preco: 60.00, emoji: "🍟", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Batata Moranha", pt: "Batata recheada estilo montanha", en: "Mountain-style stuffed potato", es: "Patata rellena estilo montaña", fr: "Pomme de terre farcie style montagne", it: "Patata ripiena stile montagna", de: "Berg-Stil gefüllte Kartoffel", zh: "山式酿土豆", ja: "マウンテンスタイルポテト", preco: 80.00, emoji: "🥔", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Calabresa com fritas", pt: "Calabresa acebolada com batata frita", en: "Pepperoni with onions and fries", es: "Salchicha calabresa con cebolla y papas fritas", fr: "Saucisse calabrese aux oignons avec frites", it: "Salsiccia calabrese con cipolle e patatine", de: "Calabrese-Wurst mit Zwiebeln und Pommes", zh: "洋葱卡拉布雷萨香肠配薯条", ja: "玉ねぎ入りカラブレーゼソーセージとフライドポテト", preco: 80.00, emoji: "🌭", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Camarão frito com fritas", pt: "Camarão frito com batata frita", en: "Fried shrimp with fries", es: "Camarón frito con papas fritas", fr: "Crevettes frites avec frites", it: "Gamberi fritti con patatine", de: "Frittierte Garnelen mit Pommes", zh: "炸虾配薯条", ja: "揚げエビとフライドポテト", preco: 150.00, emoji: "🦐", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Camarão empanado", pt: "Camarão empanado", en: "Breaded shrimp", es: "Camarón empanizado", fr: "Crevettes panées", it: "Gamberi impanati", de: "Panierte Garnelen", zh: "面包虾", ja: "パン粉エビ", preco: 160.00, emoji: "🦐", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Frango à passarinho com fritas", pt: "Frango frito com alho e batata frita", en: "Fried chicken with garlic and fries", es: "Pollo frito con ajo y papas fritas", fr: "Poulet frit à l'ail avec frites", it: "Pollo fritto con aglio e patatine", de: "Gebratenes Hähnchen mit Knoblauch und Pommes", zh: "蒜香炸鸡配薯条", ja: "ガーリック揚げチキンとフライドポテト", preco: 100.00, emoji: "🍗", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Lula a Doré", pt: "Anéis de lula empanados e fritos", en: "Breaded fried squid rings", es: "Anillos de calamar empanizados y fritos", fr: "Anneaux de calamar panés et frits", it: "Anelli di calamaro impanati e fritti", de: "Panierte gebratene Tintenfischringe", zh: "炸鱿鱼圈", ja: "揚げイカリング", preco: 130.00, emoji: "🦑", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Big Hamburguer de Picanha", pt: "Hambúrguer grande de picanha", en: "Big picanha hamburger", es: "Hamburguesa grande de picanha", fr: "Gros hamburger de picanha", it: "Hamburger grande di picanha", de: "Großer Picanha-Hamburger", zh: "大份臀肉牛排汉堡", ja: "大サイズピカーニャハンバーガー", preco: 70.00, emoji: "🍔", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Cheeseburguer", pt: "Hambúrguer com queijo", en: "Cheeseburger", es: "Hamburguesa con queso", fr: "Cheeseburger", it: "Cheeseburger", de: "Cheeseburger", zh: "芝士汉堡", ja: "チーズバーガー", preco: 45.00, emoji: "🍔", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Eggburguer", pt: "Hambúrguer com ovo", en: "Egg hamburger", es: "Hamburguesa con huevo", fr: "Hamburger avec œuf", it: "Hamburger con uovo", de: "Hamburger mit Ei", zh: "鸡蛋汉堡", ja: "エッグバーガー", preco: 55.00, emoji: "🍔", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Egg X-tudo", pt: "Hambúrguer completo com ovo", en: "Complete burger with egg", es: "Hamburguesa completa con huevo", fr: "Hamburger complet avec œuf", it: "Hamburger completo con uovo", de: "Komplett-Burger mit Ei", zh: "全套鸡蛋汉堡", ja: "エッグX-tudoバーガー", preco: 70.00, emoji: "🍔", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Gurjão de frango", pt: "Iscas de frango empanadas", en: "Breaded chicken strips", es: "Tiras de pollo empanizadas", fr: "Lanières de poulet panées", it: "Strisce di pollo impanate", de: "Panierte Hähnchenstreifen", zh: "炸面包鸡条", ja: "パン粉揚げチキンストリップ", preco: 120.00, emoji: "🍗", img: "", ativo: true },
+  { categoria: "Petiscos", nome: "Gurjão de peixe", pt: "Iscas de peixe empanadas", en: "Breaded fish strips", es: "Tiras de pescado empanizadas", fr: "Lanières de poisson panées", it: "Strisce di pesce impanate", de: "Panierte Fischstreifen", zh: "炸面包鱼条", ja: "パン粉揚げ魚ストリップ", preco: 130.00, emoji: "🐟", img: "", ativo: true },
+];
+
+let ordemCategorias = ["Bebidas", "Drinks", "Petiscos", "Aluguel"];
+let pedidos = {};
+
+// Tradução automática usando MyMemory API (gratuita)
+async function traduzir(texto, idiomaDestino) {
+  if (!texto || !texto.trim()) return texto;
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(texto)}&langpair=pt|${idiomaDestino}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    return data.responseData.translatedText || texto;
+  } catch (e) {
+    console.error('Erro tradução:', e);
+    return texto;
+  }
+}
+
+function trocarTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.secao').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('secao-' + tab).classList.add('active');
+}
+
+function renderOrdem() {
+  const lista = document.getElementById('listaOrdem');
+  lista.innerHTML = '';
+  ordemCategorias.forEach((cat, i) => {
+    const li = document.createElement('li');
+    li.draggable = true;
+    li.dataset.idx = i;
+    li.innerHTML = `<span>≡ ${cat}</span><span style="font-size:0.8rem;color:#666;">#${i+1}</span>`;
+    li.ondragstart = e => e.dataTransfer.setData('idx', i);
+    li.ondragover = e => e.preventDefault();
+    li.ondrop = e => {
+      e.preventDefault();
+      const from = parseInt(e.dataTransfer.getData('idx'));
+      const to = parseInt(li.dataset.idx);
+      const item = ordemCategorias.splice(from, 1)[0];
+      ordemCategorias.splice(to, 0, item);
+      renderOrdem();
+    };
+    lista.appendChild(li);
+  });
+}
+
+function salvarOrdem() {
+  set(ref(db, `${DB_KEY}/ordem`), ordemCategorias)
+    .then(() => alert('✅ Ordem salva!'))
+    .catch(e => alert('Erro: ' + e.message));
+}
+
+function renderProdutos() {
+  const el = document.getElementById('listaProdutos');
+  el.innerHTML = '';
+  produtos.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = `produto-admin ${!p.ativo ? 'inativo' : ''}`;
+    card.innerHTML = `
+      <div class="produto-admin-header">
+        <span class="produto-admin-cat">${p.categoria}</span>
+        <label class="toggle"><input type="checkbox" ${p.ativo ? 'checked' : ''} data-idx="${idx}" class="chk-ativo"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-row">
+        <div><label>Categoria</label><input type="text" value="${p.categoria}" data-campo="categoria" data-idx="${idx}"></div>
+        <div><label>Preço (R$)</label><input type="number" step="0.01" value="${p.preco}" data-campo="preco" data-idx="${idx}"></div>
+      </div>
+      <div class="form-row full">
+        <div><label>Nome do produto</label><input type="text" value="${p.nome}" data-campo="nome" data-idx="${idx}"></div>
+      </div>
+      <div class="form-row full">
+        <div><label>Descrição em Português</label><textarea data-campo="pt" data-idx="${idx}" rows="2">${p.pt}</textarea></div>
+      </div>
+      <div class="form-row full">
+        <div><label>Link da foto (opcional)</label><input type="text" value="${p.img}" data-campo="img" data-idx="${idx}" placeholder="https://..."></div>
+      </div>
+      <div class="alerta-traduz">💡 Ao salvar, a descrição será traduzida automaticamente para 5 idiomas</div>
+      <button class="btn-salvar" data-idx="${idx}">💾 Salvar e traduzir</button>
+      <button class="btn-excluir" data-idx="${idx}">🗑️ Excluir</button>
+    `;
+    el.appendChild(card);
+  });
+
+  // Listeners
+  el.querySelectorAll('.chk-ativo').forEach(c => {
+    c.onchange = e => {
+      const idx = parseInt(e.target.dataset.idx);
+      produtos[idx].ativo = e.target.checked;
+      const estados = produtos.map(p => p.ativo);
+      set(ref(db, `${DB_KEY}/produtos`), estados);
+      update(ref(db, `${DB_KEY}/dados/${idx}`), { ativo: e.target.checked });
+    };
+  });
+
+  el.querySelectorAll('.btn-salvar').forEach(b => {
+    b.onclick = async e => {
+      const idx = parseInt(e.target.dataset.idx);
+      const card = e.target.closest('.produto-admin');
+      const dados = {};
+      card.querySelectorAll('[data-campo]').forEach(inp => {
+        const c = inp.dataset.campo;
+        dados[c] = c === 'preco' ? parseFloat(inp.value) : inp.value;
+      });
+
+      e.target.textContent = '⏳ Traduzindo...';
+      e.target.disabled = true;
+
+      const idiomas = ['en','es','fr','it','de','zh-CN','ja'];
+      for (const i of idiomas) {
+        const chave = i === 'zh-CN' ? 'zh' : i;
+        dados[chave] = await traduzir(dados.pt, i);
+      }
+
+      Object.assign(produtos[idx], dados);
+      await update(ref(db, `${DB_KEY}/dados/${idx}`), dados);
+
+      e.target.textContent = '✅ Salvo!';
+      setTimeout(() => { e.target.textContent = '💾 Salvar e traduzir'; e.target.disabled = false; }, 1500);
+    };
+  });
+
+  el.querySelectorAll('.btn-excluir').forEach(b => {
+    b.onclick = e => {
+      if (!confirm('Excluir este produto?')) return;
+      const idx = parseInt(e.target.dataset.idx);
+      produtos.splice(idx, 1);
+      // Atualizar Firebase com lista nova
+      const dadosObj = {};
+      produtos.forEach((p, i) => { dadosObj[i] = p; });
+      set(ref(db, `${DB_KEY}/dados`), dadosObj);
+      set(ref(db, `${DB_KEY}/produtos`), produtos.map(p => p.ativo));
+      renderProdutos();
+    };
+  });
+}
+
+function adicionarProduto() {
+  const novo = {
+    categoria: "Petiscos", nome: "Novo produto",
+    pt: "Descrição do produto",
+    en: "", es: "", fr: "", it: "", de: "",
+    preco: 0, emoji: "🍽️", img: "", ativo: true
+  };
+  produtos.push(novo);
+  const dadosObj = {};
+  produtos.forEach((p, i) => { dadosObj[i] = p; });
+  set(ref(db, `${DB_KEY}/dados`), dadosObj);
+  renderProdutos();
+}
+
+// PEDIDOS
+function renderPedidos() {
+  const el = document.getElementById('listaPedidos');
+  el.innerHTML = '';
+  const arr = Object.entries(pedidos)
+    .map(([id, p]) => ({ id, ...p }))
+    .sort((a, b) => b.timestamp - a.timestamp);
+
+  if (arr.length === 0) {
+    el.innerHTML = '<p style="text-align:center;color:#666;padding:2rem;">Nenhum pedido ainda 🌞</p>';
+    return;
+  }
+
+  arr.forEach(p => {
+    const data = new Date(p.timestamp);
+    const hora = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const card = document.createElement('div');
+    card.className = `pedido-card ${p.status === 'entregue' ? 'entregue' : ''}`;
+    let itensHTML = '';
+    p.itens.forEach(i => {
+      itensHTML += `<div class="pedido-item">${i.quantidade}x ${i.nome} — R$ ${i.subtotal.toFixed(2).replace('.', ',')}</div>`;
+    });
+    card.innerHTML = `
+      <div class="pedido-header">
+        <span class="pedido-cadeira">🪑 ${p.cadeira}</span>
+        <span class="pedido-hora">${hora} — ${p.nome}</span>
+      </div>
+      ${itensHTML}
+      <div class="pedido-total">Total: R$ ${p.total.toFixed(2).replace('.', ',')}</div>
+      <button class="btn-entregue ${p.status === 'entregue' ? 'entregue' : ''}" data-id="${p.id}">${p.status === 'entregue' ? '✓ Entregue' : 'Marcar como entregue'}</button>
+    `;
+    el.appendChild(card);
+  });
+
+  el.querySelectorAll('.btn-entregue').forEach(b => {
+    b.onclick = e => {
+      const id = e.target.dataset.id;
+      const novoStatus = pedidos[id].status === 'entregue' ? 'novo' : 'entregue';
+      update(ref(db, `${DB_KEY}/pedidos/${id}`), { status: novoStatus });
+    };
+  });
+}
+
+// RESUMO
+function renderResumo() {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const inicioDia = hoje.getTime();
+
+  const pedidosDia = Object.values(pedidos).filter(p => p.timestamp >= inicioDia);
+  const totalPedidos = pedidosDia.length;
+  const receita = pedidosDia.reduce((s, p) => s + p.total, 0);
+  const ticket = totalPedidos > 0 ? receita / totalPedidos : 0;
+
+  document.getElementById('totalPedidosDia').textContent = totalPedidos;
+  document.getElementById('receitaDia').textContent = `R$ ${receita.toFixed(0)}`;
+  document.getElementById('ticketMedio').textContent = `R$ ${ticket.toFixed(0)}`;
+
+  // Ranking produtos
+  const cont = {};
+  pedidosDia.forEach(p => {
+    p.itens.forEach(i => {
+      cont[i.nome] = (cont[i.nome] || 0) + i.quantidade;
+    });
+  });
+  const ranking = Object.entries(cont).sort((a, b) => b[1] - a[1]);
+  document.getElementById('topProduto').textContent = ranking[0]?.[0]?.substring(0, 12) || '—';
+
+  const rEl = document.getElementById('rankingProdutos');
+  rEl.innerHTML = ranking.length === 0
+    ? '<p style="color:#666;font-size:0.9rem;">Sem dados ainda</p>'
+    : ranking.slice(0, 10).map((r, i) => `<div style="padding:6px 0;border-bottom:1px solid #eee;font-size:0.9rem;"><strong>${i+1}.</strong> ${r[0]} — <span style="color:#0A6EBD;font-weight:bold;">${r[1]}x</span></div>`).join('');
+}
+
+// Firebase
+onValue(ref(db, DB_KEY), (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    if (data.dados) {
+      Object.keys(data.dados).forEach(key => {
+        const idx = parseInt(key);
+        const d = data.dados[key];
+        if (!d) return;
+        if (produtos[idx]) {
+          Object.keys(d).forEach(k => { produtos[idx][k] = d[k]; });
+        } else {
+          produtos[idx] = { ...d, ativo: d.ativo !== undefined ? d.ativo : true };
+        }
+      });
+    }
+    if (data.produtos) {
+      data.produtos.forEach((ativo, i) => { if (produtos[i]) produtos[i].ativo = ativo; });
+    }
+    if (data.ordem) ordemCategorias = data.ordem;
+    if (data.pedidos) pedidos = data.pedidos;
+  }
+  renderOrdem();
+  renderProdutos();
+  renderPedidos();
+  renderResumo();
+});
+
+window.trocarTab = trocarTab;
+window.salvarOrdem = salvarOrdem;
+window.adicionarProduto = adicionarProduto;
+</script>
+
+</body>
+</html>
