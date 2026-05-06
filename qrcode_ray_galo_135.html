@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>QR Code — Ray Galo 135</title>
+<style>
+  @media print {
+    body { background: white !important; }
+    .card { box-shadow: none !important; border: 2px solid #0A6EBD !important; }
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; margin: 0;
+    background: linear-gradient(180deg, #FFFDE7 0%, #FFF9C4 100%);
+    padding: 1rem;
+  }
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(10,110,189,0.20);
+    max-width: 380px;
+    border: 4px solid #FFEB3B;
+    position: relative;
+    overflow: hidden;
+  }
+  .logo {
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 1rem;
+    display: block;
+    border: 3px solid #0A6EBD;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  }
+  h1 {
+    margin: 0 0 0.3rem;
+    font-size: 1.4rem;
+    color: #0A6EBD;
+    letter-spacing: 0.02em;
+    font-weight: 800;
+  }
+  .subtitulo {
+    color: #FFEB3B;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+  }
+  .endereco {
+    color: #64748B;
+    font-size: 0.82rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.4;
+  }
+  .qr {
+    width: 220px; height: 220px;
+    background: white;
+    padding: 8px;
+    border: 2px solid #0A6EBD;
+    border-radius: 12px;
+  }
+  .instrucoes {
+    margin-top: 1.2rem;
+    font-size: 0.85rem;
+    color: #0A6EBD;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+  .badge-cardapio {
+    background: #0A6EBD;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.1;
+  }
+  .badge-cardapio .sep {
+    color: #FFEB3B;
+    font-weight: 900;
+  }
+  .instrucoes-multi {
+    margin-top: 1.2rem;
+    font-size: 0.78rem;
+    color: #0A6EBD;
+    line-height: 1.5;
+  }
+  .instrucoes-multi .linha {
+    margin: 4px 0;
+    font-weight: 600;
+  }
+  .instrucoes-multi .linha + .linha {
+    border-top: 1px dashed #E5E7EB;
+    padding-top: 4px;
+  }
+  .instrucoes-multi .icone {
+    margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <img class="logo" src="https://i.imgur.com/ZTH4jbP.png" alt="Ray Galo 135">
+  <div class="badge-cardapio">
+    <span>CARDÁPIO DIGITAL</span>
+    <span class="sep">·</span>
+    <span>DIGITAL MENU</span>
+    <span class="sep">·</span>
+    <span>MENÚ DIGITAL</span>
+  </div>
+  <h1>RAY GALO</h1>
+  <div class="subtitulo">— 135 —</div>
+  <div class="endereco">Posto 4 — Copacabana, Rio de Janeiro / RJ</div>
+
+  <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://ray-galo-135.vercel.app&color=0A6EBD&bgcolor=ffffff&qzone=2&format=png" alt="QR Code Ray Galo 135">
+
+  <div class="instrucoes-multi">
+    <div class="linha">
+      <span class="icone">🇧🇷</span> Aponte sua câmera para o QR Code
+    </div>
+    <div class="linha">
+      <span class="icone">🇺🇸</span> Point your camera at the QR Code
+    </div>
+    <div class="linha">
+      <span class="icone">🇪🇸</span> Apunta tu cámara al código QR
+    </div>
+    <div class="linha" style="margin-top:8px; color:#FFEB3B; font-weight:700;">
+      🌍 Cardápio em 8 idiomas / 8 languages / 8 idiomas
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
